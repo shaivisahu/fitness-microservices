@@ -15,19 +15,12 @@ public class user {
     @Column(unique = true, nullable = false)
     private String email;
 
-    @Column(nullable) = false
+    @Column(nullable) =false
     private String password;
     private String firstName;
     private String lastName;
 
-    @Enumerated(EnumType.STRING)
-    private UserRole role = UserRole.USER;
 
-    @CreationTimestamp
-    private LocalDataTime createdAt;
-
-    @UpdateTimestamp
-    private LocalDateTime updatedAt;
 
 
 }
