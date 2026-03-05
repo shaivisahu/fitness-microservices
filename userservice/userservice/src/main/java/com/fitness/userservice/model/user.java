@@ -20,6 +20,16 @@ public class user {
     private String firstName;
     private String lastName;
 
+    @Enumerated(EnumType.STRING)
+    private UserRole role = UserRole.USER;
+
+    @CreationTimestamp
+    private LocalDateTime createdAt;
+
+    @UpdateTimestamp
+    private LocalDateTime updatedAt;
+
+
 
 
 
