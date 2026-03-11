@@ -9,15 +9,21 @@ import lombok.Data;
 public class RegisterRequest {
     @NotBlank(message = "Email is required")
     @Email(message = "Invaid emial format")
-    private String email;
+    private String Email;
 
     @NotBlank(message = "Password is required")
     @Size(min = 6, message = "Password must be atleast of 6 character")
-    private String password;
+    private String Password;
 
-    private String firstName;
-    private String lastName;
+    private String FirstName;
+    private String LastName;
 
     public String getPassword() {
+    }
+
+    public String getLastName() {
+    }
+
+    public String getEmail() {
     }
 }

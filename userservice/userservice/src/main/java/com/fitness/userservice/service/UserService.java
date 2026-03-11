@@ -6,12 +6,23 @@ import com.fitness.userservice.repository.UserRepository;
 import org.apache.catalina.User;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import lombok.Getter;
+import lombok.Setter;
 
 @Service
 public class UserService {
     @Autowired
     private UserRepository repository;
     public UserResponse register(RegisterRequest request) {
+        UserResponse userResponse = new UserResponse();
+        userResponse.setId();
+        userResponse.setEmail(request.getEmail());
+        userResponse.setPassword(request.getPassword());
+        userResponse.setFirstName(request.getFirstName());
+        userResponse.setLastName(request.getLastName());
+        userResponse.setCreatedAt();
+        userResponse.setUpdatedAt();
+        return userResponse;
 
         if (repository.existsById(request.getEmail())){
             throw new RuntimeException("Email already exist");
