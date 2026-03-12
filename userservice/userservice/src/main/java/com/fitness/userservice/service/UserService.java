@@ -2,65 +2,46 @@ package com.fitness.userservice.service;
 
 import com.fitness.userservice.dto.RegisterRequest;
 import com.fitness.userservice.dto.UserResponse;
+import com.fitness.userservice.model.User;
 import com.fitness.userservice.repository.UserRepository;
-import org.apache.catalina.User;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
-import lombok.Getter;
-import lombok.Setter;
 
 @Service
+@AllArgsConstructor
 public class UserService {
-    @Autowired
-    private UserRepository repository;
-    public UserResponse register(RegisterRequest request) {
-        UserResponse userResponse = new UserResponse();
-        userResponse.setId();
-        userResponse.setEmail(request.getEmail());
-        userResponse.setPassword(request.getPassword());
-        userResponse.setFirstName(request.getFirstName());
-        userResponse.setLastName(request.getLastName());
-        userResponse.setCreatedAt();
-        userResponse.setUpdatedAt();
-        return userResponse;
 
-        if (repository.existsById(request.getEmail())){
-            throw new RuntimeException("Email already exist");
+    private final UserRepository userRepository;
+
+    public UserResponse register(RegisterRequest request) {
+        if (userRepository.existsByEmail(request.getEmail())) {
+            throw new RuntimeException("Email already exists: " + request.getEmail());
         }
+
         User user = new User();
         user.setEmail(request.getEmail());
-        user.setPassword(request.getPassword());
-        user.setFullName(request.getLastName());
+        user.setPassword(request.getPassword()); // hash this in production!
+        user.setFirstName(request.getFirstName());
         user.setLastName(request.getLastName());
 
-        User savedUser = repository.save(user);
-        UserResponse userResponse = new UserResponse();
-        userResponse.setId(savedUser.getId());
-        userResponse.setPassword(savedUser.getPassword());
-        userResponse.setEmail(savedUser.getEmail());
-        userResponse.setFullName(savedUser.getFirstName());
-        userResponse.setLastName(savedUser.getLastName());
-        userResponse.setCreatedAt(savedUser.getCreatedAt());
-        userResponse.setUpadatedAt(savedUser.getUpdatedAt());
-
-        return userResponse;
-
+        User saved = userRepository.save(user);
+        return mapToResponse(saved);
     }
-    public UserResponse getUserProfile(String userId){
-        User user = (User) repository.findById(userId)
-                .orElseThrow(() -> new RuntimeException("User Not Found"));
 
-        UserResponse userResponse = new UserResponse();
-        userResponse.setId(user.getId());
-        userResponse.setPassword(user.getPassword());
-        userResponse.setEmail(user.getEmail());
-        userResponse.setFullName(user.getFirstName());
-        userResponse.setLastName(user.getLastName());
-        userResponse.setCreatedAt(user.getCreatedAt());
-        userResponse.setUpadatedAt(user.getUpdatedAt());
+    public UserResponse getUserProfile(String userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("User not found: " + userId));
+        return mapToResponse(user);
+    }
 
-        return userResponse;
-
-
+    private UserResponse mapToResponse(User user) {
+        UserResponse response = new UserResponse();
+        response.setId(user.getId());
+        response.setEmail(user.getEmail());
+        response.setFirstName(user.getFirstName());
+        response.setLastName(user.getLastName());
+        response.setCreatedAt(user.getCreatedAt());
+        response.setUpdatedAt(user.getUpdatedAt());
+        return response;
     }
 }

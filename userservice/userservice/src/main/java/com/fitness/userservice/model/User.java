@@ -2,10 +2,12 @@ package com.fitness.userservice.model;
 
 import jakarta.persistence.*;
 import lombok.Data;
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "user")
+@Table(name = "users")
 @Data
 public class User {
     @Id
@@ -15,8 +17,9 @@ public class User {
     @Column(unique = true, nullable = false)
     private String email;
 
-    @Column(nullable =false)
+    @Column(nullable = false)
     private String password;
+
     private String firstName;
     private String lastName;
 
@@ -28,9 +31,4 @@ public class User {
 
     @UpdateTimestamp
     private LocalDateTime updatedAt;
-
-
-
-
-
 }
