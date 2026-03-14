@@ -2,30 +2,37 @@ package com.fitness.userservice.service;
 
 import com.fitness.userservice.dto.*;
 import com.fitness.userservice.model.User;
+import com.fitness.userservice.model.UserRole;
 import com.fitness.userservice.repository.UserRepository;
 import com.fitness.userservice.security.JwtService;
-import lombok.AllArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import java.util.List;
+import java.util.logging.Logger;
+import java.util.stream.Collectors;
 
 @Service
-@AllArgsConstructor
-@Slf4j
 public class UserService {
+
+    private static final Logger log = Logger.getLogger(UserService.class.getName());
 
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
 
+    public UserService(UserRepository userRepository, PasswordEncoder passwordEncoder, JwtService jwtService) {
+        this.userRepository = userRepository;
+        this.passwordEncoder = passwordEncoder;
+        this.jwtService = jwtService;
+    }
+
     public AuthResponse register(RegisterRequest request) {
         if (userRepository.existsByEmail(request.getEmail())) {
             throw new RuntimeException("Email already registered: " + request.getEmail());
         }
-
         User user = new User();
         user.setEmail(request.getEmail());
-        user.setPassword(passwordEncoder.encode(request.getPassword())); // BCrypt hashed!
+        user.setPassword(passwordEncoder.encode(request.getPassword()));
         user.setFirstName(request.getFirstName());
         user.setLastName(request.getLastName());
         user.setWeightKg(request.getWeightKg());
@@ -33,9 +40,14 @@ public class UserService {
         user.setAge(request.getAge());
         user.setFitnessGoal(request.getFitnessGoal());
 
-        User saved = userRepository.save(user);
-        log.info("New user registered: {}", saved.getEmail());
+        // First ever user becomes ADMIN automatically
+        if (userRepository.count() == 0) {
+            user.setRole(UserRole.ADMIN);
+            log.info("First user registered as ADMIN: " + request.getEmail());
+        }
 
+        User saved = userRepository.save(user);
+        log.info("New user registered: " + saved.getEmail());
         String token = jwtService.generateToken(saved.getId(), saved.getEmail());
         return new AuthResponse(token, mapToResponse(saved));
     }
@@ -43,12 +55,10 @@ public class UserService {
     public AuthResponse login(LoginRequest request) {
         User user = userRepository.findByEmail(request.getEmail())
                 .orElseThrow(() -> new RuntimeException("Invalid email or password"));
-
         if (!passwordEncoder.matches(request.getPassword(), user.getPassword())) {
             throw new RuntimeException("Invalid email or password");
         }
-
-        log.info("User logged in: {}", user.getEmail());
+        log.info("User logged in: " + user.getEmail());
         String token = jwtService.generateToken(user.getId(), user.getEmail());
         return new AuthResponse(token, mapToResponse(user));
     }
@@ -73,6 +83,31 @@ public class UserService {
 
     public boolean existsById(String userId) {
         return userRepository.existsById(userId);
+    }
+
+    // ─── ADMIN METHODS ────────────────────────────────────────────
+    public List<UserResponse> getAllUsers() {
+        return userRepository.findAll()
+                .stream()
+                .map(this::mapToResponse)
+                .collect(Collectors.toList());
+    }
+
+    public void deleteUser(String userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("User not found: " + userId));
+        if (user.getRole() == UserRole.ADMIN) {
+            throw new RuntimeException("Cannot delete an admin user.");
+        }
+        userRepository.deleteById(userId);
+        log.info("User deleted by admin: " + userId);
+    }
+
+    public UserResponse makeAdmin(String userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("User not found: " + userId));
+        user.setRole(UserRole.ADMIN);
+        return mapToResponse(userRepository.save(user));
     }
 
     private UserResponse mapToResponse(User user) {

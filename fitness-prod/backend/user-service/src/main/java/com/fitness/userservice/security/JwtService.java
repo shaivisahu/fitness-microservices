@@ -2,16 +2,17 @@ package com.fitness.userservice.security;
 
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.security.Keys;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import javax.crypto.SecretKey;
 import java.util.Date;
+import java.util.logging.Logger;
 
 @Service
-@Slf4j
 public class JwtService {
+
+    private static final Logger log = Logger.getLogger(JwtService.class.getName());
 
     @Value("${jwt.secret}")
     private String jwtSecret;
@@ -46,7 +47,7 @@ public class JwtService {
             parseClaims(token);
             return true;
         } catch (JwtException | IllegalArgumentException e) {
-            log.error("Invalid JWT token: {}", e.getMessage());
+            log.warning("Invalid JWT token: " + e.getMessage());
             return false;
         }
     }

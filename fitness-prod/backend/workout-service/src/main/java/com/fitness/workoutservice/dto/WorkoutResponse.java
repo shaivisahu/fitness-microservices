@@ -1,10 +1,8 @@
 package com.fitness.workoutservice.dto;
 
-import lombok.Data;
 import java.time.LocalDateTime;
 import java.util.List;
 
-@Data
 public class WorkoutResponse {
     private String id;
     private String userId;
@@ -17,4 +15,27 @@ public class WorkoutResponse {
     private List<ExerciseRequest> exercises;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
+
+    public String getId() { return id; }
+    public void setId(String id) { this.id = id; }
+    public String getUserId() { return userId; }
+    public void setUserId(String userId) { this.userId = userId; }
+    public String getTitle() { return title; }
+    public void setTitle(String title) { this.title = title; }
+    public String getType() { return type; }
+    public void setType(String type) { this.type = type; }
+    public Integer getDurationMinutes() { return durationMinutes; }
+    public void setDurationMinutes(Integer durationMinutes) { this.durationMinutes = durationMinutes; }
+    public Integer getCaloriesBurned() { return caloriesBurned; }
+    public void setCaloriesBurned(Integer caloriesBurned) { this.caloriesBurned = caloriesBurned; }
+    public String getNotes() { return notes; }
+    public void setNotes(String notes) { this.notes = notes; }
+    public String getStatus() { return status; }
+    public void setStatus(String status) { this.status = status; }
+    public List<ExerciseRequest> getExercises() { return exercises; }
+    public void setExercises(List<ExerciseRequest> exercises) { this.exercises = exercises; }
+    public LocalDateTime getCreatedAt() { return createdAt; }
+    public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
+    public LocalDateTime getUpdatedAt() { return updatedAt; }
+    public void setUpdatedAt(LocalDateTime updatedAt) { this.updatedAt = updatedAt; }
 }

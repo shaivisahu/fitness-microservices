@@ -5,17 +5,20 @@ import com.fitness.userservice.service.UserService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
-import lombok.AllArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/users")
-@AllArgsConstructor
 @Tag(name = "User Service", description = "Register, login and manage user profiles")
 public class UserController {
 
     private final UserService userService;
+
+    public UserController(UserService userService) {
+        this.userService = userService;
+    }
 
     @Operation(summary = "Register a new user")
     @PostMapping("/register")
@@ -47,5 +50,25 @@ public class UserController {
     @GetMapping("/{userId}/validate")
     public ResponseEntity<Boolean> validateUser(@PathVariable String userId) {
         return ResponseEntity.ok(userService.existsById(userId));
+    }
+
+    // ─── ADMIN ENDPOINTS ──────────────────────────────────────────
+    @Operation(summary = "ADMIN: Get all users")
+    @GetMapping("/all")
+    public ResponseEntity<List<UserResponse>> getAllUsers() {
+        return ResponseEntity.ok(userService.getAllUsers());
+    }
+
+    @Operation(summary = "ADMIN: Delete a user")
+    @DeleteMapping("/{userId}")
+    public ResponseEntity<Void> deleteUser(@PathVariable String userId) {
+        userService.deleteUser(userId);
+        return ResponseEntity.noContent().build();
+    }
+
+    @Operation(summary = "ADMIN: Promote user to admin")
+    @PutMapping("/{userId}/make-admin")
+    public ResponseEntity<UserResponse> makeAdmin(@PathVariable String userId) {
+        return ResponseEntity.ok(userService.makeAdmin(userId));
     }
 }

@@ -3,18 +3,17 @@ package com.fitness.workoutservice.service;
 import com.fitness.workoutservice.dto.*;
 import com.fitness.workoutservice.model.*;
 import com.fitness.workoutservice.repository.WorkoutRepository;
-import lombok.AllArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
-
 import java.util.List;
+import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
 @Service
-@Slf4j
 public class WorkoutService {
+
+    private static final Logger log = Logger.getLogger(WorkoutService.class.getName());
 
     private final WorkoutRepository workoutRepository;
     private final RestTemplate restTemplate;
@@ -35,7 +34,6 @@ public class WorkoutService {
         if (Boolean.FALSE.equals(userExists)) {
             throw new RuntimeException("User not found: " + request.getUserId());
         }
-
         Workout workout = new Workout();
         workout.setUserId(request.getUserId());
         workout.setTitle(request.getTitle());
@@ -57,9 +55,8 @@ public class WorkoutService {
             }).collect(Collectors.toList());
             workout.setExercises(exercises);
         }
-
         Workout saved = workoutRepository.save(workout);
-        log.info("Workout logged for user: {}", request.getUserId());
+        log.info("Workout logged for user: " + request.getUserId());
         return mapToResponse(saved);
     }
 
@@ -79,6 +76,12 @@ public class WorkoutService {
             throw new RuntimeException("Workout not found: " + workoutId);
         }
         workoutRepository.deleteById(workoutId);
+    }
+
+    // ─── ADMIN ────────────────────────────────────────────────────
+    public List<WorkoutResponse> getAllWorkouts() {
+        return workoutRepository.findAll()
+                .stream().map(this::mapToResponse).collect(Collectors.toList());
     }
 
     private WorkoutResponse mapToResponse(Workout w) {

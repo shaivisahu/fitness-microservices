@@ -13,7 +13,9 @@
     <artifactId>ai-service</artifactId>
     <version>0.0.1-SNAPSHOT</version>
     <n>ai-service</n>
-    <properties><java.version>22</java.version></properties>
+    <properties><java.version>25</java.version>  <maven.compiler.source>25</maven.compiler.source>
+    <maven.compiler.target>25</maven.compiler.target>
+  </properties>
     <dependencies>
         <dependency><groupId>org.springframework.boot</groupId><artifactId>spring-boot-starter-web</artifactId></dependency>
         <dependency><groupId>org.springframework.boot</groupId><artifactId>spring-boot-starter-data-mongodb</artifactId></dependency>

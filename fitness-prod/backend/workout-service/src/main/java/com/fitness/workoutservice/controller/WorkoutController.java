@@ -5,18 +5,20 @@ import com.fitness.workoutservice.service.WorkoutService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
-import lombok.AllArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
 @RequestMapping("/api/workouts")
-@AllArgsConstructor
 @Tag(name = "Workout Service", description = "Log and manage workouts")
 public class WorkoutController {
 
     private final WorkoutService workoutService;
+
+    public WorkoutController(WorkoutService workoutService) {
+        this.workoutService = workoutService;
+    }
 
     @Operation(summary = "Log a new workout")
     @PostMapping
@@ -41,5 +43,12 @@ public class WorkoutController {
     public ResponseEntity<Void> deleteWorkout(@PathVariable String workoutId) {
         workoutService.deleteWorkout(workoutId);
         return ResponseEntity.noContent().build();
+    }
+
+    // ─── ADMIN ENDPOINT ───────────────────────────────────────────
+    @Operation(summary = "ADMIN: Get all workouts from all users")
+    @GetMapping("/all")
+    public ResponseEntity<List<WorkoutResponse>> getAllWorkouts() {
+        return ResponseEntity.ok(workoutService.getAllWorkouts());
     }
 }
