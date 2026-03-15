@@ -1,0 +1,74 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: api-gateway
+  cloud:
+    gateway:
+      discovery:
+        locator:
+          enabled: true
+          lower-case-service-id: true
+      routes:
+        - id: auth-service
+          uri: lb://auth-service
+          predicates:
+            - Path=/api/auth/**
+          filters:
+            - StripPrefix=0
+
+        - id: workout-service
+          uri: lb://workout-service
+          predicates:
+            - Path=/api/workouts/**
+          filters:
+            - StripPrefix=0
+            - name: JwtAuthFilter
+
+        - id: diet-service
+          uri: lb://diet-service
+          predicates:
+            - Path=/api/diet/**
+          filters:
+            - StripPrefix=0
+            - name: JwtAuthFilter
+
+        - id: ai-service
+          uri: lb://ai-service
+          predicates:
+            - Path=/api/ai/**
+          filters:
+            - StripPrefix=0
+            - name: JwtAuthFilter
+
+        - id: stats-service
+          uri: lb://stats-service
+          predicates:
+            - Path=/api/stats/**
+          filters:
+            - StripPrefix=0
+            - name: JwtAuthFilter
+
+      globalcors:
+        cors-configurations:
+          '[/**]':
+            allowedOrigins: "http://localhost:3000"
+            allowedMethods: [GET, POST, PUT, DELETE, OPTIONS]
+            allowedHeaders: ["*"]
+            allowCredentials: true
+
+eureka:
+  client:
+    service-url:
+      defaultZone: ${EUREKA_URI:http://localhost:8761/eureka}
+
+app:
+  jwt:
+    secret: ${JWT_SECRET:fittrack-jwt-secret-key-microservices-v3-2026}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,routes

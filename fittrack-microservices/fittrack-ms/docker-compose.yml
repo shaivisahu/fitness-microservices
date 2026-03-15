@@ -1,0 +1,176 @@
+version: '3.8'
+
+services:
+
+  # ── Infrastructure ─────────────────────────────────────────────
+
+  zookeeper:
+    image: confluentinc/cp-zookeeper:7.5.0
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+    networks: [fittrack]
+
+  kafka:
+    image: confluentinc/cp-kafka:7.5.0
+    depends_on: [zookeeper]
+    ports: ["9092:9092"]
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
+    networks: [fittrack]
+
+  mysql-auth:
+    image: mysql:8.0
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: fittrack_auth
+    ports: ["3307:3306"]
+    networks: [fittrack]
+    volumes: [auth-data:/var/lib/mysql]
+
+  mysql-workout:
+    image: mysql:8.0
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: fittrack_workout
+    ports: ["3308:3306"]
+    networks: [fittrack]
+    volumes: [workout-data:/var/lib/mysql]
+
+  mysql-diet:
+    image: mysql:8.0
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: fittrack_diet
+    ports: ["3309:3306"]
+    networks: [fittrack]
+    volumes: [diet-data:/var/lib/mysql]
+
+  mysql-ai:
+    image: mysql:8.0
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: fittrack_ai
+    ports: ["3310:3306"]
+    networks: [fittrack]
+    volumes: [ai-data:/var/lib/mysql]
+
+  mysql-stats:
+    image: mysql:8.0
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: fittrack_stats
+    ports: ["3311:3306"]
+    networks: [fittrack]
+    volumes: [stats-data:/var/lib/mysql]
+
+  # ── Spring Cloud Infrastructure ────────────────────────────────
+
+  eureka-server:
+    build: ./eureka-server
+    ports: ["8761:8761"]
+    networks: [fittrack]
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8761/actuator/health"]
+      interval: 10s
+      retries: 5
+
+  config-server:
+    build: ./config-server
+    ports: ["8888:8888"]
+    networks: [fittrack]
+    depends_on:
+      eureka-server:
+        condition: service_healthy
+    environment:
+      EUREKA_URI: http://eureka-server:8761/eureka
+
+  api-gateway:
+    build: ./api-gateway
+    ports: ["8080:8080"]
+    networks: [fittrack]
+    depends_on: [eureka-server, config-server]
+    environment:
+      EUREKA_URI: http://eureka-server:8761/eureka
+      CONFIG_URI: http://config-server:8888
+
+  # ── Business Services ──────────────────────────────────────────
+
+  auth-service:
+    build: ./auth-service
+    ports: ["8081:8081"]
+    networks: [fittrack]
+    depends_on: [eureka-server, mysql-auth]
+    environment:
+      DB_URL: jdbc:mysql://mysql-auth:3306/fittrack_auth?createDatabaseIfNotExist=true&useSSL=false&allowPublicKeyRetrieval=true
+      DB_USER: root
+      DB_PASS: root
+      EUREKA_URI: http://eureka-server:8761/eureka
+      JWT_SECRET: fittrack-jwt-secret-key-microservices-v3-2026
+
+  workout-service:
+    build: ./workout-service
+    ports: ["8082:8082"]
+    networks: [fittrack]
+    depends_on: [eureka-server, mysql-workout, kafka]
+    environment:
+      DB_URL: jdbc:mysql://mysql-workout:3306/fittrack_workout?createDatabaseIfNotExist=true&useSSL=false&allowPublicKeyRetrieval=true
+      DB_USER: root
+      DB_PASS: root
+      KAFKA_SERVERS: kafka:9092
+      EUREKA_URI: http://eureka-server:8761/eureka
+      JWT_SECRET: fittrack-jwt-secret-key-microservices-v3-2026
+
+  diet-service:
+    build: ./diet-service
+    ports: ["8083:8083"]
+    networks: [fittrack]
+    depends_on: [eureka-server, mysql-diet, kafka]
+    environment:
+      DB_URL: jdbc:mysql://mysql-diet:3306/fittrack_diet?createDatabaseIfNotExist=true&useSSL=false&allowPublicKeyRetrieval=true
+      DB_USER: root
+      DB_PASS: root
+      KAFKA_SERVERS: kafka:9092
+      EUREKA_URI: http://eureka-server:8761/eureka
+      JWT_SECRET: fittrack-jwt-secret-key-microservices-v3-2026
+
+  ai-service:
+    build: ./ai-service
+    ports: ["8084:8084"]
+    networks: [fittrack]
+    depends_on: [eureka-server, mysql-ai, kafka]
+    environment:
+      DB_URL: jdbc:mysql://mysql-ai:3306/fittrack_ai?createDatabaseIfNotExist=true&useSSL=false&allowPublicKeyRetrieval=true
+      DB_USER: root
+      DB_PASS: root
+      KAFKA_SERVERS: kafka:9092
+      EUREKA_URI: http://eureka-server:8761/eureka
+      JWT_SECRET: fittrack-jwt-secret-key-microservices-v3-2026
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY}
+
+  stats-service:
+    build: ./stats-service
+    ports: ["8085:8085"]
+    networks: [fittrack]
+    depends_on: [eureka-server, mysql-stats, kafka]
+    environment:
+      DB_URL: jdbc:mysql://mysql-stats:3306/fittrack_stats?createDatabaseIfNotExist=true&useSSL=false&allowPublicKeyRetrieval=true
+      DB_USER: root
+      DB_PASS: root
+      KAFKA_SERVERS: kafka:9092
+      EUREKA_URI: http://eureka-server:8761/eureka
+      JWT_SECRET: fittrack-jwt-secret-key-microservices-v3-2026
+
+networks:
+  fittrack:
+    driver: bridge
+
+volumes:
+  auth-data:
+  workout-data:
+  diet-data:
+  ai-data:
+  stats-data:
