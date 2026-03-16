@@ -20,6 +20,8 @@ SERVICES=(
   "stats-service"
 )
 
+
+
 for svc in "${SERVICES[@]}"; do
   echo ">>> Building $svc..."
   cd "$svc"
