@@ -16,6 +16,7 @@ public class AiSuggestion {
     @Column(nullable = false)
     private String username;
 
+
     @Enumerated(EnumType.STRING)
     private SuggestionType type;
 
@@ -27,6 +28,7 @@ public class AiSuggestion {
 
     @Column(updatable = false)
     private LocalDateTime createdAt;
+
 
     @PrePersist protected void onCreate() { createdAt = LocalDateTime.now(); }
 

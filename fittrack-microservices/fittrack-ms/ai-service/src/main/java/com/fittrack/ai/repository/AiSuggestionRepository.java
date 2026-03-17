@@ -8,5 +8,7 @@ import java.util.List;
 @Repository
 public interface AiSuggestionRepository extends JpaRepository<AiSuggestion, Long> {
     List<AiSuggestion> findByUsernameOrderByCreatedAtDesc(String username);
+
+
     List<AiSuggestion> findTop5ByUsernameOrderByCreatedAtDesc(String username);
 }
